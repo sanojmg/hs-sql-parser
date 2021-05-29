@@ -49,7 +49,7 @@ data SelectStmnt = SelectStmnt
     , groupBy :: ColumnList
     , orderBy :: ColumnList
     }
-      deriving (Show)
+    deriving (Show)
 
 data Expr = AExpr ArithExpr
           | BExpr BoolExpr

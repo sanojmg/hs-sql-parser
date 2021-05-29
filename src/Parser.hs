@@ -65,7 +65,7 @@ arithParens = ArithParens <$> (parens arithExpr)
 arithCaseExpr :: Parser ArithExpr
 arithCaseExpr = ArithCaseExpr <$> (caseExpr arithExpr)
 
-caseExpr :: a -> Parser (CaseExpr a)
+caseExpr :: Parser a -> Parser (CaseExpr a)
 caseExpr resExpr = CaseExpr
                         <$> (reserved "case" *> many1 whenClause)
                         <*> optionMaybe elseClause
@@ -79,7 +79,7 @@ caseExpr resExpr = CaseExpr
 arithFunc :: Parser ArithExpr
 arithFunc = ArithFunc 
                 <$> identifier 
-                <*> parens (commaSep expr)
+                <*> parens (commaSep ((AExpr <$> arithExpr) <|> (BExpr <$> boolExpr))) --- TODO - bool expr as arg
 
 boolParens :: Parser BoolExpr
 boolParens = BoolParens <$> (parens boolExpr)
@@ -92,12 +92,13 @@ nullLit :: Parser BoolExpr
 nullLit = NullLit <$ reserved "null"
 
 boolCaseExpr :: Parser BoolExpr
-boolCaseExpr = ArithCaseExpr <$> (caseExpr boolExpr)
+boolCaseExpr = BoolCaseExpr <$> (caseExpr boolExpr)
 
-boolFunc :: Parser ArithExpr
+boolFunc :: Parser BoolExpr
 boolFunc = BoolFunc 
                 <$> identifier 
-                <*> parens (commaSep expr)
+                <*> parens (commaSep ((AExpr <$> arithExpr) <|> (BExpr <$> boolExpr))) --- TODO - bool expr as arg
+               --  <*> parens (commaSep expr)
 
 -- data ArithExpr = IntegralLit Integer
 --                | FractionalLit Double
@@ -131,7 +132,15 @@ arithExpr :: Parser ArithExpr
 arithExpr = buildExpressionParser arithOps arithTerm
 
 relnExpr :: Parser BoolExpr
-relnExpr = buildExpressionParser relnOps arithTerm
+relnExpr = do
+   t1 <- arithExpr
+   relOp <- relnOps
+   t2 <- arithExpr
+   return $ RelBinary relOp t1 t2
+
+-- existExpr :: Parser BoolExpr
+-- existExpr = existsOp <*> SelectStmnt
+
 
 -- data BoolExpr = NullLit
 --               | BoolLit Bool
@@ -151,6 +160,7 @@ boolTerm =  try boolCaseExpr
         <|> boolLit
         <|> boolParens
         <|> relnExpr
+      --   <|> existExpr
 
 boolExpr :: Parser BoolExpr
 boolExpr = buildExpressionParser boolOps boolTerm
@@ -162,6 +172,7 @@ expr :: Parser Expr
 expr =  (AExpr <$> arithExpr)
     <|> (BExpr <$> boolExpr)
 
+-- arithOps :: [[Operator String () (Identity ArithExpr)]]
 arithOps = [ [Prefix (reservedOp "-"   >> return (Neg                 ))          ]
            , [Infix  (reservedOp "*"   >> return (ArithBinary Multiply)) AssocLeft,
               Infix  (reservedOp "/"   >> return (ArithBinary Divide  )) AssocLeft,
@@ -170,19 +181,29 @@ arithOps = [ [Prefix (reservedOp "-"   >> return (Neg                 ))        
               Infix  (reservedOp "-"   >> return (ArithBinary Subtract)) AssocLeft]
            ]
 
+-- relnOps :: [[Operator String () (Identity BoolExpr)]]
+-- relnOps = [ [Infix  (reservedOp "<="   >> return (RelBinary LessOrEq   )) AssocRight,
+--              Infix  (reservedOp ">="   >> return (RelBinary GreaterOrEq)) AssocRight,
+--              Infix  (reservedOp "<"    >> return (RelBinary Less       )) AssocRight,
+--              Infix  (reservedOp ">"    >> return (RelBinary Greater    )) AssocRight,
+--              Infix  (reservedOp "like" >> return (RelBinary Like       )) AssocRight,
+--              Infix  (reservedOp "!="   >> return (RelBinary NotEq      )) AssocRight,
+--              Infix  (reservedOp "<>"   >> return (RelBinary NotEq      )) AssocRight,
+--              Infix  (reservedOp "="    >> return (RelBinary Eq         )) AssocRight]
+--           ]
+relnOps =     (reservedOp "<="   >> return LessOrEq)   
+          <|> (reservedOp ">="   >> return GreaterOrEq)
+          <|> (reservedOp "<"    >> return Less)       
+          <|> (reservedOp ">"    >> return Greater)    
+          <|> (reservedOp "like" >> return Like)       
+          <|> (reservedOp "!="   >> return NotEq)      
+          <|> (reservedOp "<>"   >> return NotEq)      
+          <|> (reservedOp "="    >> return Eq)    
 
-relnOps = [ [Infix  (reservedOp "<="   >> return (RelBinary LessOrEq   )) AssocRight,
-             Infix  (reservedOp ">="   >> return (RelBinary GreaterOrEq)) AssocRight,
-             Infix  (reservedOp "<"    >> return (RelBinary Less       )) AssocRight,
-             Infix  (reservedOp ">"    >> return (RelBinary Greater    )) AssocRight,
-             Infix  (reservedOp "like" >> return (RelBinary Like       )) AssocRight,
-             Infix  (reservedOp "!="   >> return (RelBinary NotEq      )) AssocRight,
-             Infix  (reservedOp "<>"   >> return (RelBinary NotEq      )) AssocRight,
-             Infix  (reservedOp "="    >> return (RelBinary Eq         )) AssocRight]
-          ]
-    
-boolOps = [ [Prefix (reservedOp "not"     >> return (Not            ))          ,
-             Prefix (reservedOp "exists"  >> return (Exists         ))          ]
+existsOp = (reservedOp "exists"  >> return Exists)          
+             
+-- boolOps :: [[Operator String () (Identity BoolExpr)]]    
+boolOps = [ [Prefix (reservedOp "not"     >> return (Not            ))          ]
           , [Infix  (reservedOp "and"     >> return (BoolBinary And )) AssocLeft,
              Infix  (reservedOp "or"      >> return (BoolBinary Or  )) AssocLeft]
           ]
