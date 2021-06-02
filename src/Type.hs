@@ -14,11 +14,11 @@ type AliasName = String
 type ColumnName = String
 type FunctionName = String
 
-type WhenPredicate = BoolExpr
+type WhenPredicate = Expr
 
-data CaseExpr a = CaseExpr 
-    { whenClause :: [(WhenPredicate, a)] 
-    , elseClause :: (Maybe a)
+data CaseExpr = CaseExpr 
+    { whenClause :: [(WhenPredicate, Expr)] 
+    , elseClause :: (Maybe Expr)
     }
       deriving (Show)
 
@@ -28,46 +28,55 @@ data JoinType = InnerJoin
               | FullOuterJoin
                 deriving (Eq, Show) 
 
-data JoinCriteria = JoinOn BoolExpr
-                  | JoinUsing [ColumnName]
+data JoinCriteria = JoinOn Expr
                     deriving (Show)
 
-data FromItem = TableRelation TableName
-              | JoinRelation FromItem JoinType FromItem JoinCriteria
-              | Subquery SelectStmnt 
-              | FromParens FromItem
-              | FromAlias FromItem AliasName
+data FromItem = FromItemJoin JoinRelation
+              | FromItemNonJoin NonJoinRelation
                 deriving (Show)
 
-type WherePredicate = BoolExpr
+data NonJoinRelation = TableRelation TableName
+                     | Subquery SelectStmnt 
+                     | FromAlias FromItem AliasName
+                       deriving (Show)
+
+data JoinRelation = Join FromItem JoinType FromItem JoinCriteria
+                    deriving (Show)
+
+type WherePredicate = Expr
 type ColumnList = [Expr]
 
 data SelectStmnt = SelectStmnt 
-    { selectExpr :: SelectExpr
-    , fromItem :: FromItem
-    , wherePred :: WherePredicate
-    , groupBy :: ColumnList
-    , orderBy :: ColumnList
+    { selectCl :: SelectExpr
+    , fromCl :: [FromItem]
+    , whereCl :: Maybe WherePredicate
+    , groupByCl :: ColumnList
+    , orderByCl :: ColumnList
     }
     deriving (Show)
 
-data Expr = AExpr ArithExpr
-          | BExpr BoolExpr
-            deriving (Show)
 
-data ArithExpr = IntegralLit Integer
-               | FractionalLit Double
-               | StringLit String
-               | Identifier String
-               | QfdIdentifier String String
-               | Asterisk
-               | QfdAsterisk String
-               | Neg ArithExpr
-               | ArithBinary ArithBinOp ArithExpr ArithExpr 
-               | ArithParens ArithExpr
-               | ArithCaseExpr (CaseExpr ArithExpr) 
-               | ArithFunc FunctionName [Expr]  
-                 deriving (Show)
+data Expr = IntegralLit Integer
+          | FractionalLit Double
+          | StringLit String
+          | Identifier String
+          | QfdIdentifier String String
+          | Asterisk
+          | QfdAsterisk String
+          | Neg Expr
+          | ArithBinary ArithBinOp Expr Expr 
+          | Parens Expr
+          | CaseSt CaseExpr
+          | Func FunctionName [Expr]  
+          | NullLit
+          | BoolLit Bool
+          | BIdentifier String
+          | QfdBIdentifier String String
+          | Not Expr
+          | Exists SelectStmnt
+          | BoolBinary BoolBinOp Expr Expr
+          | RelBinary RelnBinOp Expr Expr
+            deriving (Show) 
 
 data ArithBinOp = Add
                 | Subtract
@@ -75,17 +84,6 @@ data ArithBinOp = Add
                 | Divide
                 | Modulo
                   deriving (Show)
-
-data BoolExpr = NullLit
-              | BoolLit Bool
-              | Not BoolExpr
-              | Exists SelectStmnt
-              | BoolBinary BoolBinOp BoolExpr BoolExpr
-              | RelBinary RelnBinOp ArithExpr ArithExpr
-              | BoolParens BoolExpr
-              | BoolCaseExpr (CaseExpr BoolExpr)
-              | BoolFunc FunctionName [Expr]
-                deriving (Show) 
 
 data RelnBinOp = LessOrEq
                | GreaterOrEq
