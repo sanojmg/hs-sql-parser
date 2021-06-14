@@ -19,13 +19,62 @@ pprint p s = case (tparseEof p s) of
 
 
 instance Pretty SelectStmnt where
-    pretty (SelectStmnt selectCl fromCl whereCl groupByCl orderByCl) = undefined
+    pretty (SelectStmnt selectCl fromCl whereCl groupByCl orderByCl) = 
+            align $ vsep [pSel selectCl, 
+                          pFrm fromCl, 
+                          pWhr whereCl, 
+                          pGrp groupByCl, 
+                          pOrd orderByCl]
+
+        where
+            -- pSel :: [(Expr, Maybe T.Text)] -> Doc ann
+            pSel cols = align $ vsep [prettyS "SELECT", pCols cols]
+
+            -- pCols :: [(Expr, Maybe T.Text)] -> Doc ann
+            pCols cols = indent 4 $ encloseSep emptyDoc emptyDoc comma (pCol <$> cols)
+
+            pCol (col, alias) = pretty col <+> pAl alias
+            pAl (Just an) = prettyS "AS " <+> prettyS an 
+            pAl Nothing = prettyS ""
+            
+            pFrm :: [FromItem] -> Doc ann
+            pFrm frms = prettyS "FROM " <+> (align $ vsep (pretty <$> frms))
+
+            pWhr :: Maybe WherePredicate -> Doc ann
+            pWhr (Just whr) = prettyS "WHERE " <+> (align $ pretty whr)
+            pWhr Nothing = emptyDoc
+
+            pGrp :: ColumnList -> Doc ann
+            pGrp [] = emptyDoc
+            pGrp cols@(x : xs) = prettyS "GROUP BY " <+> (align $ 
+                                    encloseSep emptyDoc emptyDoc comma (pretty <$> cols)) 
+
+            pOrd :: ColumnList -> Doc ann
+            pOrd [] = emptyDoc
+            pOrd cols@(x : xs) = prettyS "ORDER BY " <+> (align $ 
+                                    encloseSep emptyDoc emptyDoc comma (pretty <$> cols))   
+
+
+instance Pretty FromItem where
+    pretty (FromItemJoin joinReln) = pretty joinReln
+    pretty (FromItemNonJoin njReln) = pretty njReln
+
+instance Pretty NonJoinRelation where
+    pretty (TableRelation tn) = prettyS tn
+    pretty (Subquery sel) = parens $ pretty sel
+    pretty (FromAlias nj an) = pretty nj <+> pretty ("AS " ++ an)
+
+instance Pretty JoinRelation where
+    pretty (Join jType njReln jCrit) = pretty jType <+> pretty njReln <+> pretty jCrit
 
 instance Pretty JoinType where
     pretty InnerJoin = prettyS "INNER JOIN" 
     pretty LeftOuterJoin = prettyS "LEFT OUTER JOIN"  
     pretty RightOuterJoin = prettyS "RIGHT OUTER JOIN"  
     pretty FullOuterJoin = prettyS "FULL OUTER JOIN" 
+
+instance Pretty JoinCriteria where
+    pretty (JoinOn expr) = line <> prettyS "ON" <+> (align $ pretty expr)  
 
 instance Pretty Expr where
     pretty (IntegralLit n) = pretty n
@@ -76,7 +125,8 @@ instance Pretty RelnBinOp where
     pretty Eq = prettyS "="
 
 instance Pretty BoolBinOp where
-    pretty And = prettyS "AND"
-    pretty Or = prettyS "OR"
+    pretty And = line <> prettyS "AND"
+    pretty Or = line <> prettyS "OR"
 
-prettyS s = pretty (s :: T.Text)
+prettyS s = pretty (s :: String)
+
