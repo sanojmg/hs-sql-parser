@@ -37,10 +37,10 @@ data FromItem = FromItemJoin JoinRelation
 
 data NonJoinRelation = TableRelation TableName
                      | Subquery SelectStmnt 
-                     | FromAlias FromItem AliasName
+                     | FromAlias NonJoinRelation AliasName
                        deriving (Show)
 
-data JoinRelation = Join FromItem JoinType FromItem JoinCriteria
+data JoinRelation = Join JoinType NonJoinRelation JoinCriteria
                     deriving (Show)
 
 type WherePredicate = Expr
@@ -70,8 +70,6 @@ data Expr = IntegralLit Integer
           | Func FunctionName [Expr]  
           | NullLit
           | BoolLit Bool
-          | BIdentifier String
-          | QfdBIdentifier String String
           | Not Expr
           | Exists SelectStmnt
           | BoolBinary BoolBinOp Expr Expr

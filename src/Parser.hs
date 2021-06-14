@@ -122,7 +122,7 @@ relnOps = [ [Infix  (reservedOp "<="   >> return (RelBinary LessOrEq   )) AssocR
              Infix  (reservedOp ">="   >> return (RelBinary GreaterOrEq)) AssocRight,
              Infix  (reservedOp "<"    >> return (RelBinary Less       )) AssocRight,
              Infix  (reservedOp ">"    >> return (RelBinary Greater    )) AssocRight,
-             Infix  (reservedOp "like" >> return (RelBinary Like       )) AssocRight,
+             Infix  (reserved   "like" >> return (RelBinary Like       )) AssocRight,
              Infix  (reservedOp "!="   >> return (RelBinary NotEq      )) AssocRight,
              Infix  (reservedOp "<>"   >> return (RelBinary NotEq      )) AssocRight,
              Infix  (reservedOp "="    >> return (RelBinary Eq         )) AssocRight]
@@ -131,9 +131,9 @@ relnOps = [ [Infix  (reservedOp "<="   >> return (RelBinary LessOrEq   )) AssocR
 existsOp = (reservedOp "exists"  >> return Exists)          
              
 -- boolOps :: [[Operator String () (Identity BoolExpr)]]    
-boolOps = [ [Prefix (reservedOp "not"     >> return (Not            ))          ]
-          , [Infix  (reservedOp "and"     >> return (BoolBinary And )) AssocLeft,
-             Infix  (reservedOp "or"      >> return (BoolBinary Or  )) AssocLeft]
+boolOps = [ [Prefix (reserved "not"     >> return (Not            ))          ]
+          , [Infix  (reserved "and"     >> return (BoolBinary And )) AssocLeft,
+             Infix  (reserved "or"      >> return (BoolBinary Or  )) AssocLeft]
           ]
 
 -- prefix :: String -> ArithExpr -> Operator String () Identity ArithExpr -- TODO
@@ -157,34 +157,49 @@ selectExpr = reserved "select" *> commaSep1 columnExpr
       aName = optional (reserved "as") *> identifier    
 
 fromClause :: Parser [FromItem]
-fromClause = reserved "from" *> fc
-   where
-      fc = (:) <$> nj <*> (many fromItem)
-      nj = FromItemNonJoin <$> nonJoinRelation
+fromClause = (:)
+               <$> (reserved "from" *> (FromItemNonJoin <$> nonJoinRelation))
+               <*> option [] fromItmLst
+   -- do
+   --  _ <- reserved "from"
+   --  first <- FromItemNonJoin <$> nonJoinRelation
+   --  rest <- option [] fromItmLst
+   --  return (first : rest)
+       
+-- fromClause = reserved "from" *> ((:) <$> firstItm <*> fromItmLst firstItm) --- change arg
+--   where
+   --  firstItm = FromItemNonJoin <$> nonJoinRelation         
 
+fromItmLst :: Parser [FromItem]
+fromItmLst = many (FromItemJoin <$> joinRelation) 
+   -- do
+   --  next <- FromItemJoin <$> joinRelation 
+   --  rest <- option [] fromItmLst
+   --  return (next : rest)
+   
 ---- Parse FromItem 
-fromItem :: Parser FromItem
-fromItem =  FromItemNonJoin <$> nonJoinRelation
-        <|> FromItemJoin <$> joinRelation
+-- fromItem :: FromItem -> Parser FromItem
+-- fromItem leftRln =  (FromItemNonJoin <$> nonJoinRelation)
+--                 <|> (FromItemJoin <$> joinRelation leftRln)
 
 nonJoinRelation :: Parser NonJoinRelation
-nonJoinRelation =  subquery
-               <|> try fromAlias
-               <|> tableRelation
-
+nonJoinRelation = do
+    tab <- (subquery <|> tableRelation) 
+    option tab (fromAlias tab)
+  
 tableRelation :: Parser NonJoinRelation
 tableRelation = TableRelation <$> identifier
 
 subquery :: Parser NonJoinRelation
 subquery = Subquery <$> parens selectStmnt
 
-fromAlias :: Parser NonJoinRelation
-fromAlias = FromAlias <$> fromItem <*> (reserved "as" *> identifier)
+fromAlias :: NonJoinRelation -> Parser NonJoinRelation
+fromAlias reln = FromAlias reln <$> (reserved "as" *> identifier)
 
-joinRelation :: FromItem -> Parser JoinRelation
-joinRelation leftRln = Join leftRln <$> joinType 
-                                    <*> fromItem 
-                                    <*> joinCriteria
+joinRelation :: Parser JoinRelation
+joinRelation = Join <$> joinType 
+                    <*> nonJoinRelation 
+                    <*> joinCriteria
 
 joinType :: Parser JoinType
 joinType =  InnerJoin <$ optional (reserved "inner") <* reserved "join"
@@ -203,5 +218,4 @@ groupBy = reserved "group" *> reserved "by" *> commaSep1 expr
 
 orderBy :: Parser ColumnList
 orderBy = reserved "order" *> reserved "by" *> commaSep1 expr
-
 

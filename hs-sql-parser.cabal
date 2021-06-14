@@ -28,6 +28,7 @@ library
       Lexer
       Lib
       Parser
+      Pretty
       Type
   other-modules:
       Paths_hs_sql_parser
@@ -42,6 +43,7 @@ library
     , filepath
     , optparse-applicative
     , parsec
+    , prettyprinter
     , text
     , wreq
   default-language: Haskell2010
@@ -63,6 +65,7 @@ executable hs-sql-parser-exe
     , hs-sql-parser
     , optparse-applicative
     , parsec
+    , prettyprinter
     , text
     , wreq
   default-language: Haskell2010
@@ -85,6 +88,7 @@ test-suite hs-sql-parser-test
     , hs-sql-parser
     , optparse-applicative
     , parsec
+    , prettyprinter
     , text
     , wreq
   default-language: Haskell2010

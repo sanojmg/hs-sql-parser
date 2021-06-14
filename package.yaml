@@ -33,6 +33,7 @@ dependencies:
 - parsec
 - wreq
 - HUnit
+- prettyprinter
 
 library:
   source-dirs: src
