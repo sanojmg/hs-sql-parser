@@ -1,3 +1,5 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module Parser where
 
 import System.IO
@@ -31,6 +33,12 @@ import Debug.Trace (traceM)
 
 -- Parser a = Parsec String () a = ParsecT String () Identity a
 -- s: stream, u: user state, m: monad, a: return type
+runParser :: String -> Either ParseError SelectStmnt
+runParser = parse (whiteSpace *> selectStmnt) ""
+
+runParserEof :: String -> Either ParseError SelectStmnt
+runParserEof = parse (whiteSpace *> selectStmnt <* eof) ""
+
 tparse :: Parser a -> String -> Either ParseError a
 tparse p = parse (whiteSpace *> p) ""
 
@@ -160,27 +168,9 @@ fromClause :: Parser [FromItem]
 fromClause = (:)
                <$> (reserved "from" *> (FromItemNonJoin <$> nonJoinRelation))
                <*> option [] fromItmLst
-   -- do
-   --  _ <- reserved "from"
-   --  first <- FromItemNonJoin <$> nonJoinRelation
-   --  rest <- option [] fromItmLst
-   --  return (first : rest)
        
--- fromClause = reserved "from" *> ((:) <$> firstItm <*> fromItmLst firstItm) --- change arg
---   where
-   --  firstItm = FromItemNonJoin <$> nonJoinRelation         
-
 fromItmLst :: Parser [FromItem]
 fromItmLst = many (FromItemJoin <$> joinRelation) 
-   -- do
-   --  next <- FromItemJoin <$> joinRelation 
-   --  rest <- option [] fromItmLst
-   --  return (next : rest)
-   
----- Parse FromItem 
--- fromItem :: FromItem -> Parser FromItem
--- fromItem leftRln =  (FromItemNonJoin <$> nonJoinRelation)
---                 <|> (FromItemJoin <$> joinRelation leftRln)
 
 nonJoinRelation :: Parser NonJoinRelation
 nonJoinRelation = do

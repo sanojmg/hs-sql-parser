@@ -20,13 +20,17 @@ pprint p s = case (tparseEof p s) of
 
 instance Pretty SelectStmnt where
     pretty (SelectStmnt selectCl fromCl whereCl groupByCl orderByCl) = 
-            align $ vsep [pSel selectCl, 
-                          pFrm fromCl, 
-                          pWhr whereCl, 
-                          pGrp groupByCl, 
-                          pOrd orderByCl]
+            align $ vsep $ 
+                filter nonEmpty [pSel selectCl, 
+                                 pFrm fromCl, 
+                                 pWhr whereCl, 
+                                 pGrp groupByCl, 
+                                 pOrd orderByCl]
 
         where
+            nonEmpty :: Doc ann -> Bool
+            nonEmpty doc = (length $ show doc) > 0
+
             -- pSel :: [(Expr, Maybe T.Text)] -> Doc ann
             pSel cols = align $ vsep [prettyS "SELECT", pCols cols]
 
@@ -38,7 +42,7 @@ instance Pretty SelectStmnt where
             pAl Nothing = prettyS ""
             
             pFrm :: [FromItem] -> Doc ann
-            pFrm frms = prettyS "FROM " <+> (align $ vsep (pretty <$> frms))
+            pFrm frms = align $ prettyS "FROM " <+> vsep (pretty <$> frms)
 
             pWhr :: Maybe WherePredicate -> Doc ann
             pWhr (Just whr) = prettyS "WHERE " <+> (align $ pretty whr)
@@ -61,7 +65,7 @@ instance Pretty FromItem where
 
 instance Pretty NonJoinRelation where
     pretty (TableRelation tn) = prettyS tn
-    pretty (Subquery sel) = parens $ pretty sel
+    pretty (Subquery sel) = parens $ (nest 4 $ line <> pretty sel) <> line 
     pretty (FromAlias nj an) = pretty nj <+> pretty ("AS " ++ an)
 
 instance Pretty JoinRelation where

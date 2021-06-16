@@ -1,10 +1,10 @@
 name:                hs-sql-parser
 version:             0.1.0.0
-github:              "githubuser/hs-sql-parser"
-license:             BSD3
-author:              "Author name here"
-maintainer:          "example@example.com"
-copyright:           "2021 Author name here"
+github:              "sanojmg/hs-sql-parser"
+license:             Apache-2.0
+author:              "Sanoj MG"
+maintainer:          ""
+copyright:           "2021 Sanoj MG"
 
 extra-source-files:
 - README.md

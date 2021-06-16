@@ -111,8 +111,10 @@ charLiteral :: Parser Char -- This lexeme parser parses a single literal charact
 charLiteral = Token.charLiteral lexer
 
 stringLiteral :: Parser String -- parses a literal string. Returns the literal string value. 
-stringLiteral = Token.stringLiteral lexer
+stringLiteral = Token.stringLiteral lexer <|> stringLiteralSqt
 
 lexeme :: forall a. Parser a -> Parser a -- lexeme p first applies parser p and then the whiteSpace parser, returning the value of p.
 lexeme = Token.lexeme lexer
 
+-- stringLiteralSqt :: Parser String -- parses a literal string enclosed in single quotes. Returns the literal string value. 
+stringLiteralSqt = lexeme (char '\'' *> manyTill anyChar (char '\''))
