@@ -45,7 +45,7 @@ instance Pretty SelectStmnt where
             pFrm frms = align $ prettyS "FROM " <+> vsep (pretty <$> frms)
 
             pWhr :: Maybe WherePredicate -> Doc ann
-            pWhr (Just whr) = prettyS "WHERE " <+> (align $ pretty whr)
+            pWhr (Just whr) = prettyS "WHERE " <+> (nest 2 $ pretty whr)
             pWhr Nothing = emptyDoc
 
             pGrp :: ColumnList -> Doc ann
@@ -78,7 +78,7 @@ instance Pretty JoinType where
     pretty FullOuterJoin = prettyS "FULL OUTER JOIN" 
 
 instance Pretty JoinCriteria where
-    pretty (JoinOn expr) = line <> prettyS "ON" <+> (align $ pretty expr)  
+    pretty (JoinOn expr) = line <> prettyS "ON" <+> (nest 2 $ pretty expr)  
 
 instance Pretty Expr where
     pretty (IntegralLit n) = pretty n

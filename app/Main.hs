@@ -3,11 +3,13 @@ module Main where
 
 import Data.Semigroup ((<>))
 import Options.Applicative
+import System.IO
 import qualified Data.Text as T  
 import qualified Data.Text.IO as TIO 
 import qualified Text.Parsec as P (ParseError) 
 
 import Prettyprinter
+import Prettyprinter.Render.Text
 
 import Parser
 import Pretty
@@ -58,9 +60,17 @@ readInFile Nothing = TIO.getContents
 
 writeAST :: Either P.ParseError SelectStmnt -> Maybe FilePath -> Bool -> IO ()
 writeAST (Left err) _ _ = print $ "Error parsing SQL: " <> show err
-writeAST (Right sel) outFile isPretty = do
-    let outStr = if isPretty then (show $ pretty sel) else (show sel)
-    writeOutFile outFile (T.pack outStr)
-
+writeAST (Right sel) outFile isPretty = 
+    if isPretty then
+        writeDocOutFile outFile (pretty sel)
+    else
+        writeOutFile outFile (T.pack $ show sel)
+    
 writeOutFile (Just fileName) str = TIO.writeFile fileName str
 writeOutFile Nothing str = TIO.putStr str   
+
+writeDocOutFile Nothing doc = hPutDoc stdout doc 
+writeDocOutFile (Just fileName) doc = withFile fileName WriteMode act
+    where
+        act h = hPutDoc h doc
+ 

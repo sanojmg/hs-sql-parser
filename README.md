@@ -1,6 +1,54 @@
 
-## hs-sql-parser: A parser written in Haskell for simple SQL like queries
+## hs-sql-parser: A parser for simple SQL like queries
 
+A parser written in Haskell using [Parsec](https://hackage.haskell.org/package/parsec) library. It supports parsing a small subset of Hive and Spark SQL dialect.
+
+The parser produces an abstract syntax tree (AST) which can be pretty printed. Pretty printing is implemented using [prettyprinter](https://hackage.haskell.org/package/prettyprinter) library. 
+
+### SQL Syntax: 
+
+        SELECT select_expr, select_expr, ...
+        FROM table_reference
+        [WHERE where_condition]
+        [GROUP BY col_list]
+        [ORDER BY col_list]
+
+        - table_reference can be a regular table, a join construct (INNER/LEFT OUTER/RIGHT OUTER/FULL OUTER) or a subquery
+
+### Prerequisites: 
+- [stack](https://docs.haskellstack.org/en/stable/README/)
+
+To install stack on common Un*x operating systems: 
+
+        curl -sSL https://get.haskellstack.org/ | sh
+or
+
+        wget -qO- https://get.haskellstack.org/ | sh
+
+To install stack on macOS with brew:
+
+        brew install haskell-stack
+
+
+
+### Installation: 
+
+Check out the repo and change to the directory.
+
+1. Download dependencies: 
+
+        stack setup 
+
+2. Build the package: 
+
+        stack build
+
+3. Sample run: 
+
+        stack run -- -i test/resources/t.sql -p
+
+
+### Usage: 
 
         Usage: hs-sql-parser-exe [-i|--input-file INPUTFILE]
                                 [-o|--output-file OUTPUTFILE] [-p|--pretty]
@@ -15,7 +63,7 @@
         -h,--help                Show this help text
 
 
-Eg: 
+### Demo: 
 
         > cat test/resources/t.sql
 
