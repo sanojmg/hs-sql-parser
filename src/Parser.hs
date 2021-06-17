@@ -7,7 +7,7 @@ import Control.Monad
 
 import Text.Parsec.String (Parser)
 
-import Text.ParserCombinators.Parsec hiding (many) -- hiding (try, (<|>), many)
+import Text.ParserCombinators.Parsec hiding (many) 
 import Text.ParserCombinators.Parsec.Expr
 import Text.ParserCombinators.Parsec.Language
 import qualified Text.ParserCombinators.Parsec.Token as Token
@@ -15,16 +15,11 @@ import qualified Text.ParserCombinators.Parsec.Token as Token
 import Lexer
 import Type
 
-import Text.Parsec (parse) -- try
+import Text.Parsec (parse) 
 import Text.Parsec (ParseError)
 import Text.Parsec.String (Parser)
-import Text.Parsec.Char (oneOf, digit, string, anyChar, char, letter, satisfy, spaces)
-import Text.Parsec.Combinator (many1, manyTill, eof, choice, between
-                                     ,sepBy, optionMaybe, chainl1)
-import Data.Char (isLetter, isDigit)
 
-import Control.Applicative (many, (<*), (<$>), (*>), (<$), (<*>)) -- (<|>),
-import Control.Monad (void, guard)
+import Control.Applicative (many, (<*), (<$>), (*>), (<$), (<*>)) 
 import qualified Text.Parsec.Expr as E
 import qualified Test.HUnit as H
 import Data.Functor.Identity
