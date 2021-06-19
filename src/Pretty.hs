@@ -2,7 +2,7 @@ module Pretty where
 
 -- import qualified Data.Text as T
 
--- import Prettyprinter
+import Prettyprinter
 -- import Prettyprinter.Util
 
 -- import Type
