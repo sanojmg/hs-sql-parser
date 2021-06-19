@@ -116,5 +116,7 @@ stringLiteral = Token.stringLiteral lexer <|> stringLiteralSqt
 lexeme :: forall a. Parser a -> Parser a -- lexeme p first applies parser p and then the whiteSpace parser, returning the value of p.
 lexeme = Token.lexeme lexer
 
--- stringLiteralSqt :: Parser String -- parses a literal string enclosed in single quotes. Returns the literal string value. 
+-- Token parser doesn't supports string literals enclosed in single quotes. This is 
+-- just a naive parser, doesn't properly handle escape chars etc.  
+stringLiteralSqt :: Parser String -- parses a literal string enclosed in single quotes. Returns the literal string value. 
 stringLiteralSqt = lexeme (char '\'' *> manyTill anyChar (char '\''))

@@ -6,7 +6,7 @@ cabal-version: 1.12
 
 name:           hs-sql-parser
 version:        0.1.0.0
-description:    Please see the README on GitHub at <https://github.com/githubuser/hs-sql-parser#readme>
+description:    Please see the README on GitHub at <https://github.com/sanojmg/hs-sql-parser#readme>
 homepage:       https://github.com/sanojmg/hs-sql-parser#readme
 bug-reports:    https://github.com/sanojmg/hs-sql-parser/issues
 author:         Sanoj MG
